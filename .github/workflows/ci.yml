@@ -35,6 +35,15 @@ jobs:
           done
           docker compose logs --no-color
           exit 1
+          for attempt in $(seq 1 18); do
+            if docker compose exec -T emqx emqx ctl status; then
+              echo "EMQX broker is running."
+              exit 0
+            fi
+            sleep 5
+          done
+          docker compose logs --no-color emqx
+          exit 1
       - name: Stop stack
         if: always()
         run: |
