@@ -47,7 +47,7 @@ public class LocationIngestionService {
                     tenant_id,vehicle_id,device_id,geofence_id,source_event_id,
                     alert_type,message,observed_speed_kmh,speed_limit_kmh,occurred_at
                 )
-                SELECT ?,b.vehicle_id,?,?,?,'GEOFENCE_SPEEDING',
+                SELECT ?,b.vehicle_id,?,g.id,?,'GEOFENCE_SPEEDING',
                     'Vehicle speed exceeded the geofence speed limit',
                     ?,g.speed_limit_kmh,?
                 FROM geofences g
@@ -57,7 +57,7 @@ public class LocationIngestionService {
                     AND ?>g.speed_limit_kmh
                     AND ST_Covers(g.area::geometry,ST_SetSRID(ST_MakePoint(?,?),4326))
                 ON CONFLICT DO NOTHING
-                """,principal.tenantId(),principal.deviceId(),null,request.eventId(),
+                """,principal.tenantId(),principal.deviceId(),request.eventId(),
                 request.speedKmh(),request.recordedAt(),principal.deviceId(),principal.tenantId(),
                 request.speedKmh(),request.longitude(),request.latitude());
         }
