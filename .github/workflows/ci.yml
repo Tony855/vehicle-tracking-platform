@@ -37,4 +37,9 @@ jobs:
           exit 1
       - name: Stop stack
         if: always()
-        run: docker compose down -v
+        run: |
+          if [ -f .env ]; then
+            docker compose down -v
+          else
+            echo "Compose environment was not created; nothing to stop."
+          fi
