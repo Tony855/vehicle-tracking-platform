@@ -4,6 +4,7 @@ import com.tony855.vehicletracking.device.DeviceCredentialService;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class LocationIngestionService {
@@ -22,6 +23,7 @@ public class LocationIngestionService {
     }
 
     /** Shared persistence path for HTTPS and broker-authenticated MQTT messages. */
+    @Transactional
     public LocationIngestionResponse ingestAuthenticated(
         DeviceCredentialService.AuthenticatedDevice principal, LocationTelemetryRequest request) {
         if (!principal.deviceUid().equals(request.deviceUid())) {
@@ -39,6 +41,26 @@ public class LocationIngestionService {
             request.longitude(), request.latitude(), request.speedKmh(), request.headingDegrees(),
             request.altitudeM(), request.satellites(), request.accuracyM(), request.ignitionOn()
         );
+        if (inserted == 1 && request.speedKmh() != null) {
+            jdbc.update("""
+                INSERT INTO alert_events(
+                    tenant_id,vehicle_id,device_id,geofence_id,source_event_id,
+                    alert_type,message,observed_speed_kmh,speed_limit_kmh,occurred_at
+                )
+                SELECT ?,b.vehicle_id,?,?,?,'GEOFENCE_SPEEDING',
+                    'Vehicle speed exceeded the geofence speed limit',
+                    ?,g.speed_limit_kmh,?
+                FROM geofences g
+                LEFT JOIN device_bindings b ON b.device_id=? AND b.tenant_id=g.tenant_id
+                    AND b.unbound_at IS NULL
+                WHERE g.tenant_id=? AND g.active=true AND g.speed_limit_kmh IS NOT NULL
+                    AND ?>g.speed_limit_kmh
+                    AND ST_Covers(g.area::geometry,ST_SetSRID(ST_MakePoint(?,?),4326))
+                ON CONFLICT DO NOTHING
+                """,principal.tenantId(),principal.deviceId(),null,request.eventId(),
+                request.speedKmh(),request.recordedAt(),principal.deviceId(),principal.tenantId(),
+                request.speedKmh(),request.longitude(),request.latitude());
+        }
         jdbc.update("UPDATE devices SET last_seen_at = now() WHERE id = ? AND tenant_id = ?",
             principal.deviceId(), principal.tenantId());
         return new LocationIngestionResponse(inserted == 1 ? "accepted" : "duplicate", request.eventId());
