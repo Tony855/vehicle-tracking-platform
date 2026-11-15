@@ -47,8 +47,8 @@ public class DeviceManagementController {
         requireAdmin(jwt);
         int changed=jdbc.update("""
             UPDATE devices SET status=?
-            WHERE id=? AND tenant_id=?
-            """,request.status(),deviceId,tenant(jwt));
+            WHERE id=? AND tenant_id=? AND (status <> 'REVOKED' OR ?='REVOKED')
+            """,request.status(),deviceId,tenant(jwt),request.status());
         return changed==1 ? ResponseEntity.ok(Map.of("status",request.status()))
             : ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error","device_not_found"));
     }
