@@ -16,14 +16,14 @@ class MqttAuthControllerTest {
 
     @Test
     void rejectsRequestsWithoutBrokerSharedSecret() {
-        var controller = new MqttAuthController(credentials, jdbc, "a".repeat(64));
+        var controller = new MqttAuthController(credentials, jdbc, "a".repeat(64), "b".repeat(64));
         var response = controller.authenticate(null, new MqttAuthRequest("GPS-1", "secret"));
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 
     @Test
     void delegatesDevicePasswordValidationToCredentialService() {
-        var controller = new MqttAuthController(credentials, jdbc, "a".repeat(64));
+        var controller = new MqttAuthController(credentials, jdbc, "a".repeat(64), "b".repeat(64));
         when(credentials.authenticate("GPS-1", "device-password")).thenReturn(Optional.empty());
         var response = controller.authenticate("a".repeat(64),
             new MqttAuthRequest("GPS-1", "device-password"));
@@ -32,7 +32,7 @@ class MqttAuthControllerTest {
 
     @Test
     void refusesWeakInternalSharedSecretConfiguration() {
-        var controller = new MqttAuthController(credentials, jdbc, "too-short");
+        var controller = new MqttAuthController(credentials, jdbc, "too-short", "b".repeat(64));
         var response = controller.authenticate("too-short",
             new MqttAuthRequest("GPS-1", "device-password"));
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
