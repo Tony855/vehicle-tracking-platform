@@ -13,7 +13,7 @@ Multi-tenant vehicle tracking SaaS for Android head units, standalone 4G GNSS tr
 
 ## Repository status
 
-The repository is being built in vertical slices. Implemented: backend service baseline, health endpoint, PostgreSQL/PostGIS schema, normalized telemetry DTO validation, tenant-scoped device enrollment with quota/expiry/revocation checks, one-time device credential issuance and server-side credential verification, and CI checks. Not yet implemented: authenticated telemetry ingestion, credential rotation/revocation APIs, MQTT broker integration, mobile apps and web console. Hardware integrations and production security configuration must be validated before production use.
+The repository is being built in vertical slices. Implemented: backend service baseline, health endpoint, PostgreSQL/PostGIS schema, normalized telemetry DTO validation, tenant-scoped device enrollment with quota/expiry/revocation checks, one-time device credential issuance and server-side credential verification, authenticated GPS location ingestion with PostGIS persistence and event deduplication, and CI checks. Not yet implemented: credential rotation/revocation APIs, MQTT broker integration, mobile apps and web console. Hardware integrations and production security configuration must be validated before production use.
 
 ## Local development
 
