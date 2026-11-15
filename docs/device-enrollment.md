@@ -36,7 +36,7 @@ Content-Type: application/json
 }
 ```
 
-The response includes a one-time `credential`. The API does not accept a client-supplied tenant ID. Enrollment token quota consumption and device creation are transactional. A duplicate device UID returns HTTP 409; invalid, expired, revoked or exhausted tokens return HTTP 401.
+The response includes a one-time `credential`. The server-side `DeviceCredentialService` verifies subsequent credentials against stored hashes and returns the authenticated device/tenant identity without exposing the hash. Disabled or revoked devices cannot authenticate. The API does not accept a client-supplied tenant ID. Enrollment token quota consumption and device creation are transactional. A duplicate device UID returns HTTP 409; invalid, expired, revoked or exhausted tokens return HTTP 401.
 
 ## Production requirements still outstanding
 - Put the API behind HTTPS and rate-limit registration attempts at the gateway.
