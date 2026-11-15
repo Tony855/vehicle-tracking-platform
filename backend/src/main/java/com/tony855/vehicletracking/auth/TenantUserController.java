@@ -83,8 +83,8 @@ public class TenantUserController {
 
     public record CreateUserRequest(@Email @NotBlank String email,
         @NotBlank @Size(min=12,max=128) String password,@NotBlank @Size(max=120) String displayName,
-        @jakarta.validation.constraints.Pattern(regexp="ADMIN|DISPATCHER|VIEWER") String role) {}
-    public record StatusRequest(@jakarta.validation.constraints.Pattern(regexp="ACTIVE|DISABLED") String status) {}
+        @NotBlank @jakarta.validation.constraints.Pattern(regexp="ADMIN|DISPATCHER|VIEWER") String role) {}
+    public record StatusRequest(@NotBlank @jakarta.validation.constraints.Pattern(regexp="ACTIVE|DISABLED") String status) {}
     public record UserView(UUID userId,String email,String displayName,String role,String status,
         java.time.Instant createdAt) {}
 }
