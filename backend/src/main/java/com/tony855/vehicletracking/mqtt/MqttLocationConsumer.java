@@ -7,7 +7,6 @@ import com.tony855.vehicletracking.telemetry.LocationTelemetryRequest;
 import jakarta.annotation.PreDestroy;
 import jakarta.validation.Validator;
 import java.nio.charset.StandardCharsets;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +16,7 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -75,7 +75,7 @@ public class MqttLocationConsumer {
         try {
             if (client != null && client.isConnected()) return;
             MqttClient candidate = new MqttClient(brokerUrl,
-                "gps-ingestor-" + UUID.randomUUID(), null);
+                "vehicle-tracking-gps-ingestor", new MemoryPersistence());
             candidate.setCallback(new MqttCallbackExtended() {
                 @Override
                 public void connectComplete(boolean reconnect, String serverURI) {
