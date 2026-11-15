@@ -3,6 +3,8 @@ package com.tony855.vehicletracking.telemetry;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,7 +46,7 @@ public class DeviceLocationQueryController {
         @RequestHeader(value = "Authorization", required = false) String authorization,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
         @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
-        @RequestParam(defaultValue = "500") int limit) {
+        @RequestParam(defaultValue = "500") @Min(1) @Max(1000) int limit) {
         if (from.isAfter(to)) throw new IllegalArgumentException("from must be <= to");
         return queryService.history(deviceUid, bearer(authorization), from, to, limit);
     }
@@ -56,6 +58,11 @@ public class DeviceLocationQueryController {
         String value = authorization.substring(7).trim();
         if (value.isEmpty()) throw new DeviceLocationQueryService.UnauthenticatedDeviceException();
         return value;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> invalidRange() {
+        return ResponseEntity.badRequest().body(Map.of("error", "invalid_time_range"));
     }
 
     @ExceptionHandler(DeviceLocationQueryService.UnauthenticatedDeviceException.class)
