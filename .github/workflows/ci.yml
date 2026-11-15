@@ -23,27 +23,35 @@ jobs:
         run: |
           cp .env.example .env
           docker compose config --quiet
-      - name: Boot stack and verify database migrations
+      - name: Boot stack and verify backend, migrations and EMQX
         run: |
           docker compose up -d --build
+          backend_healthy=0
           for attempt in $(seq 1 36); do
             if curl --fail --silent http://localhost:8080/actuator/health; then
               echo "Backend is healthy; Flyway migrations completed during startup."
-              exit 0
+              backend_healthy=1
+              break
             fi
             sleep 5
           done
-          docker compose logs --no-color
-          exit 1
+          if [ "$backend_healthy" -ne 1 ]; then
+            docker compose logs --no-color
+            exit 1
+          fi
+          emqx_ready=0
           for attempt in $(seq 1 18); do
             if docker compose exec -T emqx emqx ctl status; then
               echo "EMQX broker is running."
-              exit 0
+              emqx_ready=1
+              break
             fi
             sleep 5
           done
-          docker compose logs --no-color emqx
-          exit 1
+          if [ "$emqx_ready" -ne 1 ]; then
+            docker compose logs --no-color emqx
+            exit 1
+          fi
       - name: Stop stack
         if: always()
         run: |
