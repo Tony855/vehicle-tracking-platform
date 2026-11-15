@@ -72,8 +72,8 @@ public class GeofenceController {
         try {
             Boolean valid=jdbc.queryForObject("""
                 SELECT ST_IsValid(g) AND GeometryType(g)='POLYGON'
-                    AND ST_XMin(g)>=-180 AND ST_XMax(g)<=180
-                    AND ST_YMin(g)>=-90 AND ST_YMax(g)<=90
+                    AND ST_XMin(Box3D(g))>=-180 AND ST_XMax(Box3D(g))<=180
+                    AND ST_YMin(Box3D(g))>=-90 AND ST_YMax(Box3D(g))<=90
                 FROM (SELECT ST_GeomFromText(?,4326) AS g) p
                 """,Boolean.class,wkt);
             return Boolean.TRUE.equals(valid);
