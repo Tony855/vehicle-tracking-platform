@@ -1,5 +1,6 @@
 package com.tony855.vehicletracking.telemetry;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -29,6 +30,7 @@ public record LocationTelemetryRequest(
     @DecimalMin("0.0") BigDecimal accuracyM,
     Boolean ignitionOn
 ) {
+    @AssertTrue(message = "headingDegrees must be in [0, 360)")
     public boolean isHeadingInRange() {
         return headingDegrees == null
             || (headingDegrees.compareTo(BigDecimal.ZERO) >= 0
