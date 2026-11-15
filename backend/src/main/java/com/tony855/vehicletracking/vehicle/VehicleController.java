@@ -49,7 +49,7 @@ public class VehicleController {
             WHERE v.tenant_id=? ORDER BY v.created_at DESC
             """, (rs, row) -> new VehicleView(rs.getObject("id",UUID.class),
                 rs.getString("plate_number"),rs.getString("display_name"),rs.getString("make"),
-                rs.getString("model"),(Integer)rs.getObject("year"),rs.getString("color"),
+                rs.getString("model"),(rs.getObject("year") == null ? null : rs.getInt("year")),rs.getString("color"),
                 rs.getString("status"),rs.getObject("device_id",UUID.class),
                 rs.getString("device_uid"),rs.getString("hardware_type")), tenantId);
     }
@@ -69,14 +69,14 @@ public class VehicleController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error","vehicle_or_device_not_found"));
         }
         try {
-            UUID bindingId = jdbc.queryForObject("""
+            List<UUID> ids = jdbc.query("""
                 INSERT INTO device_bindings(tenant_id,device_id,vehicle_id)
-                VALUES (?,?,?) RETURNING id
-                """, UUID.class, tenantId, request.deviceId(), vehicleId);
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("bindingId",bindingId,"status","bound"));
-        } catch (org.springframework.dao.DuplicateKeyException conflict) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error","vehicle_or_device_already_bound"));
-        }
+                VALUES (?,?,?) ON CONFLICT DO NOTHING RETURNING id
+                """, (rs,row) -> rs.getObject("id",UUID.class), tenantId, request.deviceId(), vehicleId);
+            if (ids.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error","vehicle_or_device_already_bound"));
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("bindingId",ids.get(0),"status","bound"));
     }
 
     @DeleteMapping("/{vehicleId}/device")
