@@ -27,3 +27,16 @@ For each message the consumer:
 4. Calls the same authenticated persistence path as HTTPS, preserving PostGIS storage, event ID deduplication and last-seen updates.
 
 The Paho client retries broker connection and uses automatic reconnect with QoS 1. The database unique constraint makes redelivery idempotent. Invalid or unauthorized messages are discarded and logged without logging payload secrets.
+
+## Local smoke-test example
+
+After creating an ACTIVE device and obtaining its one-time credential, prepare a canonical JSON payload using the snake_case field names in `docs/telemetry-contract.md`, then publish from the Docker host:
+
+```bash
+mosquitto_pub -h 127.0.0.1 -p 1883 \
+  -u "$DEVICE_UID" -P "$DEVICE_CREDENTIAL" \
+  -t "v1/tenants/$TENANT_ID/devices/$DEVICE_ID/location" \
+  -q 1 -f location.json
+```
+
+The backend subscriber persists the event through the same PostGIS ingestion path as HTTPS. Re-publishing the same `event_id` must not create another location row. This local plaintext smoke test is for development only; it does not demonstrate TLS readiness or production connectivity.
