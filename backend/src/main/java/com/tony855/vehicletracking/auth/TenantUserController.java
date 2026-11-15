@@ -46,16 +46,15 @@ public class TenantUserController {
         if ("OWNER".equals(request.role())) {
             return ResponseEntity.badRequest().body(Map.of("error","owner_role_cannot_be_assigned"));
         }
-        try {
-            UUID id=jdbc.queryForObject("""
-                INSERT INTO tenant_users(tenant_id,email,password_hash,display_name,role)
-                VALUES (?,lower(?),?,?,?) RETURNING id
-                """,UUID.class,tenant(jwt),request.email(),passwords.encode(request.password()),
-                request.displayName(),request.role());
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("userId",id,"status","created"));
-        } catch (org.springframework.dao.DuplicateKeyException e) {
+        List<UUID> ids=jdbc.query("""
+            INSERT INTO tenant_users(tenant_id,email,password_hash,display_name,role)
+            VALUES (?,lower(?),?,?,?) ON CONFLICT DO NOTHING RETURNING id
+            """,(rs,row)->rs.getObject("id",UUID.class),tenant(jwt),request.email(),
+            passwords.encode(request.password()),request.displayName(),request.role());
+        if (ids.isEmpty()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error","email_already_registered"));
         }
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("userId",ids.get(0),"status","created"));
     }
 
     @PatchMapping("/{userId}/status")
