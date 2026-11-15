@@ -34,11 +34,11 @@ public class MqttAuthController {
     public ResponseEntity<Map<String, Object>> authenticate(
         @RequestHeader(value = "X-MQTT-Auth-Secret", required = false) String suppliedSecret,
         @Valid @RequestBody MqttAuthRequest request) {
-        if (!authorizedBroker(suppliedSecret)) return denied();
+        if (!authorizedBroker(suppliedSecret)) return deniedAuth();
         boolean valid = credentials.authenticate(request.username(), request.password()).isPresent();
         return valid
             ? ResponseEntity.ok(Map.of("result", "allow", "is_superuser", false))
-            : denied();
+            : deniedAuth();
     }
 
     @PostMapping("/acl")
@@ -77,6 +77,10 @@ public class MqttAuthController {
     private boolean authorizedBroker(String supplied) {
         return sharedSecret.length >= 32 && supplied != null
             && MessageDigest.isEqual(sharedSecret, supplied.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private ResponseEntity<Map<String, Object>> deniedAuth() {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("result", "deny"));
     }
 
     private ResponseEntity<Map<String, String>> denied() {
