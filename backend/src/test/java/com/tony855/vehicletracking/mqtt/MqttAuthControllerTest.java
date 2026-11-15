@@ -30,6 +30,28 @@ class MqttAuthControllerTest {
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
     }
 
+
+    @Test
+    void permitsInternalConsumerOnlyWithItsSeparateLongCredential() {
+        var controller = new MqttAuthController(credentials, jdbc, "a".repeat(64), "b".repeat(64));
+        var response = controller.authenticate("a".repeat(64),
+            new MqttAuthRequest("internal-gps-ingestor", "b".repeat(64)));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void restrictsInternalConsumerToLocationSubscriptionFilter() {
+        var controller = new MqttAuthController(credentials, jdbc, "a".repeat(64), "b".repeat(64));
+        var allowed = controller.authorize("a".repeat(64),
+            new MqttAclRequest("internal-gps-ingestor",
+                "v1/tenants/+/devices/+/location", "subscribe"));
+        var denied = controller.authorize("a".repeat(64),
+            new MqttAclRequest("internal-gps-ingestor",
+                "v1/tenants/+/devices/+/command", "subscribe"));
+        assertEquals(HttpStatus.OK, allowed.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED, denied.getStatusCode());
+    }
+
     @Test
     void refusesWeakInternalSharedSecretConfiguration() {
         var controller = new MqttAuthController(credentials, jdbc, "too-short", "b".repeat(64));
