@@ -23,3 +23,18 @@ jobs:
         run: |
           cp .env.example .env
           docker compose config --quiet
+      - name: Boot stack and verify database migrations
+        run: |
+          docker compose up -d --build
+          for attempt in $(seq 1 36); do
+            if curl --fail --silent http://localhost:8080/actuator/health; then
+              echo "Backend is healthy; Flyway migrations completed during startup."
+              exit 0
+            fi
+            sleep 5
+          done
+          docker compose logs --no-color
+          exit 1
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v
