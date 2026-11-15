@@ -22,7 +22,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class SecurityConfig {
     @Bean
-    SecretKey jwtSecretKey(@Value("${JWT_SECRET:}") String secret) {
+    SecretKey jwtSecretKey(@Value("${JWT_SECRET:local-development-only-change-before-deploy-32chars}") String secret) {
         byte[] key = secret.getBytes(StandardCharsets.UTF_8);
         if (key.length < 32) {
             throw new IllegalStateException("JWT_SECRET must contain at least 32 characters");
@@ -54,7 +54,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/api/v1/auth/login",
                     "/api/v1/bootstrap/tenants", "/api/v1/devices/register",
-                    "/api/v1/telemetry/locations", "/internal/mqtt/**").permitAll()
+                    "/api/v1/telemetry/locations", "/api/v1/devices/*/presence", "/api/v1/devices/*/locations/**", "/internal/mqtt/**").permitAll()
                 .anyRequest().authenticated())
             .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
             .build();
