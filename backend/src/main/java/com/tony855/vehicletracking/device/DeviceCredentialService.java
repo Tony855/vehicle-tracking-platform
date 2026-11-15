@@ -33,6 +33,15 @@ public class DeviceCredentialService {
             .map(record -> new AuthenticatedDevice(record.deviceId(), record.tenantId(), deviceUid));
     }
 
+    /** Resolve a broker-authenticated device by the tenant and device IDs embedded in its authorized topic. */
+    public Optional<AuthenticatedDevice> findActiveDevice(UUID tenantId, UUID deviceId) {
+        List<String> deviceUids = jdbc.query(
+            "SELECT device_uid FROM devices WHERE id = ? AND tenant_id = ? AND status = 'ACTIVE'",
+            (rs, rowNum) -> rs.getString("device_uid"), deviceId, tenantId);
+        return deviceUids.stream().findFirst()
+            .map(uid -> new AuthenticatedDevice(deviceId, tenantId, uid));
+    }
+
     private record CredentialRecord(UUID deviceId, UUID tenantId, String credentialHash) {}
 
     public record AuthenticatedDevice(UUID deviceId, UUID tenantId, String deviceUid) {}
