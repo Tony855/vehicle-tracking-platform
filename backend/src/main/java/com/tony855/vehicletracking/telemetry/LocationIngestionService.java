@@ -16,6 +16,7 @@ public class LocationIngestionService {
         this.credentials = credentials;
     }
 
+    @Transactional
     public LocationIngestionResponse ingest(String deviceCredential, LocationTelemetryRequest request) {
         var principal = credentials.authenticate(request.deviceUid(), deviceCredential)
             .orElseThrow(UnauthenticatedDeviceException::new);
