@@ -31,6 +31,8 @@ public class LocationIngestionService {
             request.longitude(), request.latitude(), request.speedKmh(), request.headingDegrees(),
             request.altitudeM(), request.satellites(), request.accuracyM(), request.ignitionOn()
         );
+        jdbc.update("UPDATE devices SET last_seen_at = now() WHERE id = ? AND tenant_id = ?",
+            principal.deviceId(), principal.tenantId());
         return new LocationIngestionResponse(inserted == 1 ? "accepted" : "duplicate", request.eventId());
     }
 
