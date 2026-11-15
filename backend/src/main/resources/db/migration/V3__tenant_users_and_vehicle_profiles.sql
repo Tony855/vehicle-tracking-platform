@@ -11,7 +11,7 @@ CREATE TABLE tenant_users (
     UNIQUE (tenant_id, id),
     UNIQUE (tenant_id, email)
 );
-CREATE INDEX ix_tenant_users_email ON tenant_users(lower(email));
+CREATE UNIQUE INDEX uq_tenant_users_email_global ON tenant_users(lower(email));
 
 ALTER TABLE vehicles
     ADD COLUMN status VARCHAR(24) NOT NULL DEFAULT 'ACTIVE'
