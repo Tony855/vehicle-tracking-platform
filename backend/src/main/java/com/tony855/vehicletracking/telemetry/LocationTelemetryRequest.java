@@ -1,5 +1,6 @@
 package com.tony855.vehicletracking.telemetry;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -17,18 +18,18 @@ import java.util.UUID;
  * Tenant identity is deliberately absent: it must come from device authentication.
  */
 public record LocationTelemetryRequest(
-    @NotNull @Min(1) @Max(1) Integer schemaVersion,
-    @NotNull UUID eventId,
-    @NotBlank @Size(max = 96) String deviceUid,
-    @NotNull Instant recordedAt,
+    @JsonAlias("schema_version") @NotNull @Min(1) @Max(1) Integer schemaVersion,
+    @JsonAlias("event_id") @NotNull UUID eventId,
+    @JsonAlias("device_uid") @NotBlank @Size(max = 96) String deviceUid,
+    @JsonAlias("recorded_at") @NotNull Instant recordedAt,
     @NotNull @DecimalMin("-90.0") @DecimalMax("90.0") BigDecimal latitude,
     @NotNull @DecimalMin("-180.0") @DecimalMax("180.0") BigDecimal longitude,
-    @DecimalMin("0.0") BigDecimal speedKmh,
-    BigDecimal headingDegrees,
-    BigDecimal altitudeM,
+    @JsonAlias("speed_kmh") @DecimalMin("0.0") BigDecimal speedKmh,
+    @JsonAlias("heading_degrees") BigDecimal headingDegrees,
+    @JsonAlias("altitude_m") BigDecimal altitudeM,
     @Min(0) @Max(255) Integer satellites,
-    @DecimalMin("0.0") BigDecimal accuracyM,
-    Boolean ignitionOn
+    @JsonAlias("accuracy_m") @DecimalMin("0.0") BigDecimal accuracyM,
+    @JsonAlias("ignition_on") Boolean ignitionOn
 ) {
     @AssertTrue(message = "headingDegrees must be in [0, 360)")
     public boolean isHeadingInRange() {
