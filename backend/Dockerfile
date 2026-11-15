@@ -6,7 +6,8 @@ COPY src ./src
 RUN mvn -B -q clean package -DskipTests
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-RUN useradd --system --uid 10001 appuser
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --uid 10001 appuser
 COPY --from=build /workspace/target/vehicle-tracking-api-0.1.0-SNAPSHOT.jar app.jar
 USER 10001
 EXPOSE 8080
