@@ -18,7 +18,15 @@ public class LocationIngestionService {
     public LocationIngestionResponse ingest(String deviceCredential, LocationTelemetryRequest request) {
         var principal = credentials.authenticate(request.deviceUid(), deviceCredential)
             .orElseThrow(UnauthenticatedDeviceException::new);
+        return ingestAuthenticated(principal, request);
+    }
 
+    /** Shared persistence path for HTTPS and broker-authenticated MQTT messages. */
+    public LocationIngestionResponse ingestAuthenticated(
+        DeviceCredentialService.AuthenticatedDevice principal, LocationTelemetryRequest request) {
+        if (!principal.deviceUid().equals(request.deviceUid())) {
+            throw new UnauthenticatedDeviceException();
+        }
         int inserted = jdbc.update("""
             INSERT INTO gps_locations (
                 tenant_id, device_id, event_id, recorded_at, position, speed_kmh,
