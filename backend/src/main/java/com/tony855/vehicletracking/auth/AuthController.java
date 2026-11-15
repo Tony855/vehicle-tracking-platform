@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,12 +35,15 @@ public class AuthController {
     }
 
     @PostMapping("/bootstrap/tenants")
+    @Transactional
     public ResponseEntity<?> bootstrap(
         @RequestHeader(value = "X-Bootstrap-Secret", required = false) String supplied,
         @Valid @RequestBody BootstrapRequest request) {
         if (!secretMatches(supplied)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "unauthorized"));
         }
+        Integer existing = jdbc.queryForObject("SELECT count(*) FROM tenant_users WHERE lower(email)=lower(?)", Integer.class, request.ownerEmail());
+        if (existing != null && existing > 0) return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "email_already_registered"));
         UUID tenantId = jdbc.queryForObject(
             "INSERT INTO tenants(name) VALUES (?) RETURNING id", UUID.class, request.tenantName());
         UUID userId = jdbc.queryForObject("""
