@@ -7,6 +7,7 @@ import com.tony855.vehicletracking.telemetry.LocationTelemetryRequest;
 import jakarta.annotation.PreDestroy;
 import jakarta.validation.Validator;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
