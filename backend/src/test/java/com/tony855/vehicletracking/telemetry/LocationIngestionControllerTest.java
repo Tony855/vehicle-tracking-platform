@@ -50,18 +50,18 @@ class LocationIngestionControllerTest {
     private String payload() {
         return """
             {
-              "schemaVersion": 1,
-              "eventId": "b6f9f1aa-7d84-4c48-9d55-6e70b6ddf2c2",
-              "deviceUid": "GPS-UNIT-00001",
-              "recordedAt": "2026-01-15T10:20:30Z",
+              "schema_version": 1,
+              "event_id": "b6f9f1aa-7d84-4c48-9d55-6e70b6ddf2c2",
+              "device_uid": "GPS-UNIT-00001",
+              "recorded_at": "2026-01-15T10:20:30Z",
               "latitude": 11.5564,
               "longitude": 104.9282,
-              "speedKmh": 42.5,
-              "headingDegrees": 180.0,
-              "altitudeM": 12.4,
+              "speed_kmh": 42.5,
+              "heading_degrees": 180.0,
+              "altitude_m": 12.4,
               "satellites": 17,
-              "accuracyM": 3.2,
-              "ignitionOn": true
+              "accuracy_m": 3.2,
+              "ignition_on": true
             }
             """;
     }
