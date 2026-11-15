@@ -22,12 +22,15 @@ public class MqttAuthController {
     private final DeviceCredentialService credentials;
     private final JdbcTemplate jdbc;
     private final byte[] sharedSecret;
+    private final byte[] ingestorPassword;
 
     public MqttAuthController(DeviceCredentialService credentials, JdbcTemplate jdbc,
-        @Value("${MQTT_AUTH_SHARED_SECRET:}") String sharedSecret) {
+        @Value("${MQTT_AUTH_SHARED_SECRET:}") String sharedSecret,
+        @Value("${MQTT_INGESTOR_PASSWORD:}") String ingestorPassword) {
         this.credentials = credentials;
         this.jdbc = jdbc;
         this.sharedSecret = sharedSecret.getBytes(StandardCharsets.UTF_8);
+        this.ingestorPassword = ingestorPassword.getBytes(StandardCharsets.UTF_8);
     }
 
     @PostMapping("/auth")
@@ -35,6 +38,14 @@ public class MqttAuthController {
         @RequestHeader(value = "X-MQTT-Auth-Secret", required = false) String suppliedSecret,
         @Valid @RequestBody MqttAuthRequest request) {
         if (!authorizedBroker(suppliedSecret)) return deniedAuth();
+        if ("internal-gps-ingestor".equals(request.username())) {
+            boolean validIngestor = ingestorPassword.length >= 32
+                && MessageDigest.isEqual(ingestorPassword,
+                    request.password().getBytes(StandardCharsets.UTF_8));
+            return validIngestor
+                ? ResponseEntity.ok(Map.of("result", "allow", "is_superuser", false))
+                : deniedAuth();
+        }
         boolean valid = credentials.authenticate(request.username(), request.password()).isPresent();
         return valid
             ? ResponseEntity.ok(Map.of("result", "allow", "is_superuser", false))
@@ -46,6 +57,11 @@ public class MqttAuthController {
         @RequestHeader(value = "X-MQTT-Auth-Secret", required = false) String suppliedSecret,
         @Valid @RequestBody MqttAclRequest request) {
         if (!authorizedBroker(suppliedSecret)) return denied();
+        if ("internal-gps-ingestor".equals(request.username())) {
+            boolean allowedFilter = "subscribe".equalsIgnoreCase(request.action())
+                && "v1/tenants/+/devices/+/location".equals(request.topic());
+            return allowedFilter ? ResponseEntity.ok(Map.of("result", "allow")) : denied();
+        }
         var device = jdbc.query("""
             SELECT id, tenant_id FROM devices
             WHERE device_uid = ? AND status = 'ACTIVE'
