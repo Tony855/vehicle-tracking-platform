@@ -52,7 +52,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/actuator/health", "/api/v1/auth/login",
+                .requestMatchers("/actuator/health", "/api/v1/info", "/api/v1/auth/login",
                     "/api/v1/bootstrap/tenants", "/api/v1/devices/register",
                     "/api/v1/telemetry/locations", "/api/v1/devices/*/presence", "/api/v1/devices/*/locations/**", "/internal/mqtt/**").permitAll()
                 .anyRequest().authenticated())
