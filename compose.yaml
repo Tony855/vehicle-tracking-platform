@@ -61,7 +61,7 @@ services:
       - emqx_data:/opt/emqx/data
       - emqx_log:/opt/emqx/log
     ports:
-      - "1883:1883"
+      - "127.0.0.1:1883:1883"
     depends_on:
       backend:
         condition: service_healthy
